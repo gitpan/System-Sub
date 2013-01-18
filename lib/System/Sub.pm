@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package System::Sub;
 {
-  $System::Sub::VERSION = '0.123440';
+  $System::Sub::VERSION = '0.130180';
 }
 
 use File::Which ();
@@ -11,11 +11,9 @@ use Symbol 'gensym';
 use IPC::Run qw(start finish);
 our @CARP_NOT;
 
-BEGIN {
-    *DEBUG = $ENV{PERL_SYSTEM_SUB_DEBUG}
-           ? sub () { 1 }
-           : sub () { '' };
-}
+use constant DEBUG => !! $ENV{PERL_SYSTEM_SUB_DEBUG};
+
+
 
 my %OPTIONS = (
     # Value is the expected ref of the option value
@@ -70,7 +68,7 @@ sub import
                 } elsif ($opt =~ /^\$?0$/) { # $0
                     $cmd = shift @$options;
                 } elsif ($opt =~ /^\@?ARGV$/) { # @ARGV
-                    _croak "$name: invalid @ARGV" if ref($options->[0]) ne 'ARRAY';
+                    _croak "$name: invalid \@ARGV" if ref($options->[0]) ne 'ARRAY';
                     $args = shift @$options;
                 } elsif (! exists ($OPTIONS{$opt_short})) {
                     _carp "$name: unknown option $opt";
@@ -195,7 +193,7 @@ System::Sub - Wrap external command with a DWIM sub
 
 =head1 VERSION
 
-version 0.123440
+version 0.130180
 
 =head1 SYNOPSIS
 
@@ -341,7 +339,7 @@ A sub that will be called for each line of the output. The argument is the
 C<chomp>-ed line.
 
     sub {
-        my ($line)
+        my ($line) = @_;
     }
 
 This argument must always be the last one.
@@ -432,6 +430,13 @@ in the package name is intended.
 =head1 AUTHOR
 
 Olivier MenguE<eacute>, C<dolmen@cpan.org>.
+
+=head1 CONTRIBUTORS
+
+Philippe Bruhat (L<BOOK|https://metacpan.org/author/BOOK>).
+
+See the L<Git log|https://github.com/dolmen/p5-System-Sub/commits/master> for
+details.
 
 =head1 COPYRIGHT & LICENSE
 

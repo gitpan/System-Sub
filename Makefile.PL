@@ -30,10 +30,11 @@ my %WriteMakefileArgs = (
     "IPC::Run" => 0,
     "Sub::Name" => 0,
     "Symbol" => 0,
+    "constant" => 0,
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.123440",
+  "VERSION" => "0.130180",
   "test" => {
     "TESTS" => "t/*.t"
   }

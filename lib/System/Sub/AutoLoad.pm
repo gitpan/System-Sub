@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package System::Sub::AutoLoad;
 {
-  $System::Sub::AutoLoad::VERSION = '0.123440';
+  $System::Sub::AutoLoad::VERSION = '0.130180';
 }
 
 use System::Sub ();
@@ -59,7 +59,7 @@ System::Sub::AutoLoad - Auto-wrap external commands as DWIM subs
 
 =head1 VERSION
 
-version 0.123440
+version 0.130180
 
 =head1 SYNOPSIS
 

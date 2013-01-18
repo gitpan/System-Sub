@@ -33,6 +33,7 @@
             "IPC::Run" : "0",
             "Sub::Name" : "0",
             "Symbol" : "0",
+            "constant" : "0",
             "perl" : "5.006",
             "strict" : "0",
             "warnings" : "0"
@@ -48,14 +49,6 @@
       }
    },
    "release_status" : "stable",
-   "resources" : {
-      "homepage" : "https://github.com/dolmen/p5-System-Sub",
-      "repository" : {
-         "type" : "git",
-         "url" : "https://github.com/dolmen/p5-System-Sub.git",
-         "web" : "https://github.com/dolmen/p5-System-Sub"
-      }
-   },
-   "version" : "0.123440"
+   "version" : "0.130180"
 }
 
