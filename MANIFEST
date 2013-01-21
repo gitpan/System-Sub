@@ -14,6 +14,7 @@ t/00-compile.t
 t/20-hostname.t
 t/21-AUTOLOAD.t
 t/22-ENV.t
+t/23-prototype.t
 t/printenv.pl
 xt/release/kwalitee.t
 xt/release/pod-coverage.t

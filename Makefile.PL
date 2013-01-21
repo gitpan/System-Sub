@@ -28,13 +28,14 @@ my %WriteMakefileArgs = (
     "Carp" => 0,
     "File::Which" => 0,
     "IPC::Run" => 0,
+    "Scalar::Util" => "1.11",
     "Sub::Name" => 0,
     "Symbol" => 0,
     "constant" => 0,
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.130180",
+  "VERSION" => "0.130210",
   "test" => {
     "TESTS" => "t/*.t"
   }

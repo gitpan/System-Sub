@@ -31,6 +31,7 @@
             "Carp" : "0",
             "File::Which" : "0",
             "IPC::Run" : "0",
+            "Scalar::Util" : "1.11",
             "Sub::Name" : "0",
             "Symbol" : "0",
             "constant" : "0",
@@ -49,6 +50,14 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.130180"
+   "resources" : {
+      "homepage" : "https://github.com/dolmen/p5-System-Sub",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/dolmen/p5-System-Sub.git",
+         "web" : "https://github.com/dolmen/p5-System-Sub"
+      }
+   },
+   "version" : "0.130210"
 }
 

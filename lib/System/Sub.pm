@@ -2,13 +2,15 @@ use strict;
 use warnings;
 package System::Sub;
 {
-  $System::Sub::VERSION = '0.130180';
+  $System::Sub::VERSION = '0.130210';
 }
 
 use File::Which ();
 use Sub::Name 'subname';
 use Symbol 'gensym';
 use IPC::Run qw(start finish);
+use Scalar::Util 1.11 ();  # set_prototype(&$) appeared in 1.11
+
 our @CARP_NOT;
 
 use constant DEBUG => !! $ENV{PERL_SYSTEM_SUB_DEBUG};
@@ -44,7 +46,10 @@ sub import
         my $name = shift;
         # Must be a scalar
         _croak "invalid arg: SCALAR expected" unless defined ref $name && ! ref $name;
-        my $fq_name;
+        my ($fq_name, $proto);
+        if ($name =~ s/\(([^)]*)\)$//s) {
+            $proto = $1;
+        }
         if (index($name, ':') > 0) {
             $fq_name = $name;
             $name = substr($fq_name, 1+rindex($fq_name, ':'));
@@ -65,6 +70,8 @@ sub import
                     _croak 'duplicate @ARGV' if $args;
                     $args = $options;
                     last
+                } elsif ($opt eq '()') {
+                    $proto = shift @$options;
                 } elsif ($opt =~ /^\$?0$/) { # $0
                     $cmd = shift @$options;
                 } elsif ($opt =~ /^\@?ARGV$/) { # @ARGV
@@ -96,6 +103,10 @@ sub import
         my $sub = defined($cmd)
                 ? _build_sub($name, [ $cmd, ($args ? @$args : ())], \%options)
                 : sub { _croak "'$name' not found in PATH" };
+
+        # As set_prototype *has* a prototype, we have to workaround it
+        # with '&'
+        &Scalar::Util::set_prototype($sub, $proto) if defined $proto;
 
         no strict 'refs';
         *{$fq_name} = subname $fq_name, $sub;
@@ -193,7 +204,7 @@ System::Sub - Wrap external command with a DWIM sub
 
 =head1 VERSION
 
-version 0.130180
+version 0.130210
 
 =head1 SYNOPSIS
 
@@ -237,6 +248,13 @@ version 0.130180
         when (1) {
         }
     }
+
+    # Import with a prototype (see perlsub)
+    use System::Sub 'hostname()';  # Empty prototype: no args allowed
+    use strict;
+    # This will fail at compile time with "Too many arguments"
+    hostname("xx");
+
 
 =head1 DESCRIPTION
 
@@ -295,6 +313,10 @@ on the C<use System::Sub> line.
 The sigil (C<$>, C<@>, C<%>) is optional.
 
 =over 4
+
+=item *
+
+C<()>: prototype of the sub. See L<perlsub/Prototypes>.
 
 =item *
 
