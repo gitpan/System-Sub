@@ -1,10 +1,7 @@
 use strict;
 use warnings;
 package System::Sub;
-{
-  $System::Sub::VERSION = '0.130210';
-}
-
+$System::Sub::VERSION = '0.142280';
 use File::Which ();
 use Sub::Name 'subname';
 use Symbol 'gensym';
@@ -23,6 +20,7 @@ my %OPTIONS = (
     '>' => '',
     '<' => '',
     'ENV' => 'HASH',
+    '?' => 'CODE',
 );
 
 sub _croak
@@ -42,6 +40,9 @@ sub import
     my $pkg = (caller)[0];
     shift;
 
+    my $common_options;
+    $common_options = shift if @_ && ref($_[0]) eq 'ARRAY';
+
     while (@_) {
         my $name = shift;
         # Must be a scalar
@@ -57,22 +58,30 @@ sub import
             $fq_name = $pkg.'::'.$name;
         }
 
+        my $options;
+        if (@_ && ref $_[0]) {
+            $options = shift;
+            splice(@$options, 0, 0, @$common_options) if $common_options;
+        } elsif ($common_options) {
+            # Just duplicate common options
+            $options = [ @$common_options ];
+        }
+
         my $cmd = $name;
         my $args;
         my %options;
-        if (@_ && ref $_[0]) {
-            my $options = shift;
 
+        if ($options) {
             while (@$options) {
                 my $opt = shift @$options;
-                (my $opt_short = $opt) =~ s/^[\$\@\%]//;
+                (my $opt_short = $opt) =~ s/^[\$\@\%\&]//;
                 if ($opt eq '--') {
-                    _croak 'duplicate @ARGV' if $args;
+                    _croak 'duplicate @ARGV' if $args && !$common_options;
                     $args = $options;
                     last
                 } elsif ($opt eq '()') {
                     $proto = shift @$options;
-                } elsif ($opt =~ /^\$?0$/) { # $0
+                } elsif ($opt =~ /^\$?0$/s) { # $0
                     $cmd = shift @$options;
                 } elsif ($opt =~ /^\@?ARGV$/) { # @ARGV
                     _croak "$name: invalid \@ARGV" if ref($options->[0]) ne 'ARRAY';
@@ -110,6 +119,16 @@ sub import
 
         no strict 'refs';
         *{$fq_name} = subname $fq_name, $sub;
+    }
+}
+
+sub _handle_error
+{
+    my ($name, $code, $cmd, $handler) = @_;
+    if ($handler) {
+        $handler->($name, $?, $cmd);
+    } else {
+        _croak "$name error ".($?>>8)
     }
 }
 
@@ -166,7 +185,7 @@ sub _build_sub
             }
             close $out;
             finish $h;
-            _croak "$name error ".($?>>8) if $? >> 8;
+            _handle_error($name, $?, \@cmd, $options->{'?'}) if $? >> 8;
             return @output
         } elsif (defined wantarray) {
             # Only the first line
@@ -174,7 +193,7 @@ sub _build_sub
             defined($output = <$out>) and chomp $output;
             close $out;
             finish $h;
-            _croak "$name error ".($?>>8) if $? >> 8;
+            _handle_error($name, $?, \@cmd, $options->{'?'}) if $? >> 8;
             _croak "no output" unless defined $output;
             return $output
         } else { # void context
@@ -186,7 +205,7 @@ sub _build_sub
             }
             close $out;
             finish $h;
-            _croak "$name error ".($?>>8) if $? >> 8;
+            _handle_error($name, $?, \@cmd, $options->{'?'}) if $? >> 8;
             return
         }
     }
@@ -204,7 +223,7 @@ System::Sub - Wrap external command with a DWIM sub
 
 =head1 VERSION
 
-version 0.130210
+version 0.142280
 
 =head1 SYNOPSIS
 
@@ -251,6 +270,7 @@ version 0.130210
 
     # Import with a prototype (see perlsub)
     use System::Sub 'hostname()';  # Empty prototype: no args allowed
+    use System::Sub hostname => [ '()' => '' ];  # Alternate syntax
     use strict;
     # This will fail at compile time with "Too many arguments"
     hostname("xx");
@@ -341,6 +361,23 @@ C<E<gt>>: I/O layers for the data fed to the command.
 
 C<E<lt>>: I/O layers for the data read from the command output.
 
+=item *
+
+C<&?>: sub that will be called if ($? >> 8) != 0.
+
+    sub {
+        my $name = shift; # name of the sub
+        my $code = shift; # exit code ($?)
+        my $cmd = shift;  # array ref to the executed command
+
+        # Default implementation:
+        require Carp;
+        Carp::croak("$name error ".($code >> 8));
+    }
+
+Mnemonic: C<&> is the sigil for subs and C<$?> is the exit code of the last
+command.
+
 =back
 
 =head1 SUB USAGE
@@ -406,6 +443,8 @@ If you do not specify a callback, the behavior is currently unspecified
 =head1 SEE ALSO
 
 =over 4
+
+=item * L<Shell>, distributed with Perl 5 to 5.14. Removed from core in 5.16.
 
 =item * L<perlipc>, L<perlfaq8>
 
